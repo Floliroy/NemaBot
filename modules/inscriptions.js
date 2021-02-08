@@ -17,7 +17,7 @@ module.exports = class Inscriptions{
 
     static async handle(message, doc){
         const sheet = doc.sheetsById["0"]
-        
+
         let redo
         do{
             redo = false
@@ -48,7 +48,7 @@ module.exports = class Inscriptions{
                     "Nom Invocateur": summoner.name,
                     "Puuid": summoner.puuid
                 })
-                Logger.log("Inscription", `${summoner.name} c'est inscrit`)
+                Logger.log("Inscription", `${summoner.name} s'est inscrit`)
                 message.react("✅")
                 return
             }catch(err){
@@ -75,7 +75,7 @@ module.exports = class Inscriptions{
                 for(let row of rows){
                     if(row["Discord Id"] == message.author.id){
                         await row.delete()
-                        Logger.log("Desinscription", `${message.content} c'est désinscrit`)
+                        Logger.log("Desinscription", `${message.content} s'est désinscrit`)
                         return
                     }
                 }
@@ -97,7 +97,7 @@ module.exports = class Inscriptions{
         do{
             redo = false
             try{
-                const summoner = await tft.Summoner.summonerByName(encodeURI(message.content.substring(13)))
+                const summoner = await tft.Summoner.summonerByName(encodeURI(message.content.substring(7)))
 
                 const rows = await sheet.getRows()
                 for(let row of rows){
@@ -114,9 +114,9 @@ module.exports = class Inscriptions{
                 if(err.response && err.response.status == 429){
                     redo = true
                 }else if(err.response && err.response.status == 404){
-                    Logger.log("Ajout Infos", `Nom d'invocateur inconnu ${message.content.substring(13)}`)
+                    Logger.log("Ajout Infos", `Nom d'invocateur inconnu ${message.content.substring(7)}`)
                 }else{
-                    Logger.log("Ajout Infos", `Erreur inconnue pour ${message.content.substring(13)}`)
+                    Logger.log("Ajout Infos", `Erreur inconnue pour ${message.content.substring(7)}`)
                     console.log(err)
                 }
             }

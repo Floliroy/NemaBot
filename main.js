@@ -5,6 +5,7 @@ require('dotenv').config()
  */
 const Logger = require('./modules/discordLogger')
 const Inscriptions = require('./modules/inscriptions')
+const GetElo = require('./modules/getElo')
 
 /**
  * Init discord bot
@@ -35,7 +36,7 @@ const channelsId = {
 
 let matchHandled = new Array()
 function checkValidMatch(matchData){
-    if(matchHandled.includes(matchData) //Already get this match
+    if(matchHandled.includes(matchData) //Already got this match
     || matchData.info.queue_id != 1090 //This isnt a normal game
     || new Date() - new Date(matchData.info.game_datetime) >= 1800000){ //Game ended more than 30 min
         return false
@@ -53,8 +54,16 @@ bot.on('message', async function(message){
 
     if(message.channel.id == channelsId.inscriptions){
         Inscriptions.handle(message, doc)
-    }else if(message.channelsId.id == channelsId.gestion && message.content.startsWith("/inscription ")){
-        Inscriptions.manual(message, doc)
+    }else if(message.channel.id == channelsId.gestion){
+        if(message.content.startsWith("/puuid ")){
+            Inscriptions.manual(message, doc)
+        }else if(message.content.startsWith("/elo")){
+            if(message.content.includes(" ")){
+                GetElo.specific(message, doc)
+            }else{
+                GetElo.all(message, doc)
+            }
+        }
     }
 })
 
