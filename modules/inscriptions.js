@@ -50,7 +50,6 @@ module.exports = class Inscriptions{
                 })
                 Logger.log("Inscription", `${summoner.name} s'est inscrit`)
                 message.react("✅")
-                return
             }catch(err){
                 if(err.response && err.response.status == 429){
                     redo = true
@@ -67,60 +66,60 @@ module.exports = class Inscriptions{
     static async delete(message, doc){
         const sheet = doc.sheetsById["0"]
 
-        let redo
-        do{
-            redo = false
-            try{
-                const rows = await sheet.getRows()
-                for(let row of rows){
-                    if(row["Discord Id"] == message.author.id){
+       
+        const rows = await sheet.getRows()
+        for(let row of rows){
+            if(row["Discord Id"] == message.author.id){
+                let redo
+                do{
+                    redo = false
+                    try{
                         await row.delete()
                         Logger.log("Desinscription", `${message.content} s'est désinscrit`)
                         return
+                    }catch(err){
+                        if(err.response && err.response.status == 429){
+                            redo = true
+                        }else{
+                            Logger.log("Desinscription", `Erreur pour ${message.content}`)
+                            console.log(err)
+                        }
                     }
-                }
-            }catch(err){
-                if(err.response && err.response.status == 429){
-                    redo = true
-                }else{
-                    Logger.log("Desinscription", `Erreur pour ${message.content}`)
-                    console.log(err)
-                }
+                }while(redo)
             }
-        }while(redo)
+        }
     }
 
     static async manual(message, doc){
         const sheet = doc.sheetsById["0"]
 
-        let redo
-        do{
-            redo = false
-            try{
-                const summoner = await tft.Summoner.summonerByName(encodeURI(message.content.substring(7)))
-
-                const rows = await sheet.getRows()
-                for(let row of rows){
-                    if(row["Nom Invocateur"].equalsRiotName(summoner.name)){
+        const rows = await sheet.getRows()
+        for(let row of rows){
+            if(row["Nom Invocateur"].equalsRiotName(message.content.substring(7))){
+                let redo
+                do{
+                    redo = false
+                    try{
+                        const summoner = await tft.Summoner.summonerByName(encodeURI(message.content.substring(7)))
                         row["Nom Invocateur"] = summoner.name
                         row["Puuid"] = summoner.puuid
                         await row.save()
                         Logger.log("Ajout Infos", `Informations trouvées pour ${summoner.name}`)
                         message.react("✅")
                         return
+                    }catch(err){
+                        if(err.response && err.response.status == 429){
+                            redo = true
+                        }else if(err.response && err.response.status == 404){
+                            Logger.log("Ajout Infos", `Nom d'invocateur inconnu ${message.content.substring(7)}`)
+                        }else{
+                            Logger.log("Ajout Infos", `Erreur inconnue pour ${message.content.substring(7)}`)
+                            console.log(err)
+                        }
                     }
-                }
-            }catch(err){
-                if(err.response && err.response.status == 429){
-                    redo = true
-                }else if(err.response && err.response.status == 404){
-                    Logger.log("Ajout Infos", `Nom d'invocateur inconnu ${message.content.substring(7)}`)
-                }else{
-                    Logger.log("Ajout Infos", `Erreur inconnue pour ${message.content.substring(7)}`)
-                    console.log(err)
-                }
+                }while(redo)
             }
-        }while(redo)
+        }
     }
 
 }

@@ -6,6 +6,7 @@ require('dotenv').config()
 const Logger = require('./modules/discordLogger')
 const Inscriptions = require('./modules/inscriptions')
 const GetElo = require('./modules/getElo')
+const GeneratePools = require('./modules/generatePools')
 
 /**
  * Init discord bot
@@ -47,10 +48,11 @@ function checkValidMatch(matchData){
 }
 
 bot.on('ready', async function(){
-    Logger.log("Demarrage", `Log en tant que ${bot.user.tag}`)
+    console.log(`DEMARRAGE: Log en tant que ${bot.user.tag}`)
 })
+
 bot.on('message', async function(message){
-    if(message.author.bot) return
+    if(message.author.bot || message.channel instanceof Discord.DMChannel) return
 
     if(message.channel.id == channelsId.inscriptions){
         Inscriptions.handle(message, doc)
@@ -61,14 +63,27 @@ bot.on('message', async function(message){
             if(message.content.includes(" ")){
                 GetElo.specific(message, doc)
             }else{
-                GetElo.all(message, doc)
+                GetElo.all(doc).then(function(){
+                    message.react("✅")
+                })
+            }
+        }else if(message.content.startsWith("/generate ")){
+            let args = message.content.split(" ")
+            if(args[1] == "init"){
+                GeneratePools.generateInit(doc).then(function(){
+                    message.react("✅")
+                })
+            }else if(!isNaN(args[1])){
+                GeneratePools.generateRound(args[1], doc).then(function(){
+                    message.react("✅")
+                })
             }
         }
     }
 })
 
 bot.on('messageUpdate', function(_, message){
-    if(message.author.bot) return
+    if(message.author.bot || message.channel instanceof Discord.DMChannel) return
 
     if(message.channel.id == channelsId.inscriptions){
         Inscriptions.handle(message, doc)
